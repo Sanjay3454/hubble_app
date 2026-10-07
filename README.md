@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hubble
+
+Hubble is a product showcase for Cavli cellular IoT modules. It includes product detail pages with an interactive 3D model, exhibitor listings, and a consultation booking flow that creates a Google Calendar event with a Meet link.
+
+## Requirements
+
+- Node.js 20 or newer
+- A Neon PostgreSQL database with the `exhibitors` and `consultations` tables used by the application
+- Google Calendar API OAuth credentials and a refresh token for consultation bookings
+- Gmail credentials for sending booking confirmation email
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and copy the environment template:
+
+```bash
+npm install
+```
+
+Copy `.env.example` to `.env.local` and set the values described below. Then run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+| --- | --- |
+| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | Authorized OAuth callback URL, for example `http://localhost:3000/api/google/callback` |
+| `GOOGLE_REFRESH_TOKEN` | Refresh token authorized for Google Calendar events |
+| `MAIL_USER` | Gmail account used to send booking confirmations |
+| `MAIL_PASS` | Gmail app password or configured mail credential |
 
-## Learn More
+Keep real credentials in `.env.local` or your deployment's secret manager. Do not commit them.
 
-To learn more about Next.js, take a look at the following resources:
+The `/api/google/auth` endpoint starts Google authorization. The callback endpoint reports whether Google returned a refresh token, but does not store it; configure the resulting token as `GOOGLE_REFRESH_TOKEN` yourself.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Responsive product catalogue and product detail pages at `/products/[slug]`
+- Interactive model viewer using the GLB asset in `public/models/`
+- Neon-backed exhibitor listings and a scraper endpoint that imports exhibitor data
+- Consultation form with Google Calendar/Meet booking and email confirmation
+- Inline loading and error states, with toast notifications for booking results
 
-## Deploy on Vercel
+## API Routes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/consult` | Creates a consultation, Calendar event, Meet link, and confirmation email |
+| `GET` | `/api/google/auth` | Starts Google OAuth authorization |
+| `GET` | `/api/google/callback` | Completes the OAuth callback and reports refresh-token availability |
+| `POST` | `/api/scrape/exhibitors` | Fetches exhibitor data and upserts it into Neon |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+- `npm run dev` starts the development server.
+- `npm run lint` runs ESLint.
+- `npm run build` creates a production build.
+- `npm run start` serves a production build.
